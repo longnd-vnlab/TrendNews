@@ -1,4 +1,4 @@
-# TrendRadar 📡
+# Phiên bản refactor của TrendRadar 📡
 
 > Công cụ phân tích xu hướng tin tức từ nhiều nền tảng truyền thông Trung Quốc với kiến trúc modular.
 
