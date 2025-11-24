@@ -1,7 +1,7 @@
 """
-配置管理工具
+Công cụ quản lý cấu hình
 
-实现配置查询和管理功能。
+Triển khai chức năng truy vấn và quản lý cấu hình.
 """
 
 from typing import Dict, Optional
@@ -12,37 +12,37 @@ from ..utils.errors import MCPError
 
 
 class ConfigManagementTools:
-    """配置管理工具类"""
+    """Lớp công cụ quản lý cấu hình"""
 
     def __init__(self, project_root: str = None):
         """
-        初始化配置管理工具
+        Khởi tạo công cụ quản lý cấu hình
 
         Args:
-            project_root: 项目根目录
+            project_root: Thư mục gốc của dự án
         """
         self.data_service = DataService(project_root)
 
     def get_current_config(self, section: Optional[str] = None) -> Dict:
         """
-        获取当前系统配置
+        Lấy cấu hình hệ thống hiện tại
 
         Args:
-            section: 配置节 - all/crawler/push/keywords/weights，默认all
+            section: Phần cấu hình - all/crawler/push/keywords/weights, mặc định all
 
         Returns:
-            配置字典
+            Dictionary cấu hình
 
-        Example:
+        Ví dụ:
             >>> tools = ConfigManagementTools()
             >>> result = tools.get_current_config(section="crawler")
             >>> print(result['crawler']['platforms'])
         """
         try:
-            # 参数验证
+            # Xác thực tham số
             section = validate_config_section(section)
 
-            # 获取配置
+            # Lấy cấu hình
             config = self.data_service.get_current_config(section=section)
 
             return {

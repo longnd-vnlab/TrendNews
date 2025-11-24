@@ -1,5 +1,5 @@
 """
-工具类模块
+Module công cụ
 
-提供参数验证、错误处理等辅助功能。
+Cung cấp chức năng hỗ trợ như xác thực tham số, xử lý lỗi, v.v.。
 """

@@ -1,7 +1,7 @@
 """
-日期解析工具
+Công cụ phân tích ngày
 
-支持多种自然语言日期格式解析，包括相对日期和绝对日期。
+Hỗ trợ phân tích nhiều định dạng ngày ngôn ngữ tự nhiên, bao gồm ngày tương đối và ngày tuyệt đối.
 """
 
 import re
@@ -11,26 +11,26 @@ from .errors import InvalidParameterError
 
 
 class DateParser:
-    """日期解析器类"""
+    """Lớp phân tích ngày"""
 
-    # 中文日期映射
+    # Ánh xạ ngày tiếng Trung
     CN_DATE_MAPPING = {
-        "今天": 0,
-        "昨天": 1,
-        "前天": 2,
-        "大前天": 3,
+        "hôm nay": 0,
+        "hôm qua": 1,
+        "hôm kia": 2,
+        "3 ngày trước": 3,
     }
 
-    # 英文日期映射
+    # Ánh xạ ngày tiếng Anh
     EN_DATE_MAPPING = {
         "today": 0,
         "yesterday": 1,
     }
 
-    # 星期映射
+    # Ánh xạ thứ trong tuần
     WEEKDAY_CN = {
-        "一": 0, "二": 1, "三": 2, "四": 3,
-        "五": 4, "六": 5, "日": 6, "天": 6
+        "một": 0, "hai": 1, "ba": 2, "bốn": 3,
+        "năm": 4, "sáu": 5, "ngày": 6, "天": 6
     }
 
     WEEKDAY_EN = {
@@ -41,28 +41,28 @@ class DateParser:
     @staticmethod
     def parse_date_query(date_query: str) -> datetime:
         """
-        解析日期查询字符串
+        Phân tích chuỗi truy vấn ngày
 
-        支持的格式：
-        - 相对日期（中文）：今天、昨天、前天、大前天、N天前
-        - 相对日期（英文）：today、yesterday、N days ago
-        - 星期（中文）：上周一、上周二、本周三
-        - 星期（英文）：last monday、this friday
-        - 绝对日期：2025-10-10、10月10日、2025年10月10日
+        Các định dạng được hỗ trợ:
+        - Ngày tương đối (tiếng Trung): hôm nay、hôm qua、hôm kia、3 ngày trước、N天前
+        - Ngày tương đối (tiếng Anh): today、yesterday、N days ago
+        - Thứ trong tuần (tiếng Trung): thứ hai tuần trước、trên周hai、thứ tư tuần này
+        - Thứ trong tuần (tiếng Anh): last monday、this friday
+        - Ngày tuyệt đối: 2025-10-10, 10 tháng 10, 2025 năm 10 tháng 10
 
         Args:
-            date_query: 日期查询字符串
+            date_query: Chuỗi truy vấn ngày
 
         Returns:
-            datetime对象
+            Đối tượng datetime
 
         Raises:
-            InvalidParameterError: 日期格式无法识别
+            InvalidParameterError: Không thể nhận dạng định dạng ngày
 
-        Examples:
-            >>> DateParser.parse_date_query("今天")
+        Ví dụ:
+            >>> DateParser.parse_date_query("hôm nay")
             datetime(2025, 10, 11)
-            >>> DateParser.parse_date_query("昨天")
+            >>> DateParser.parse_date_query("hôm qua")
             datetime(2025, 10, 10)
             >>> DateParser.parse_date_query("3天前")
             datetime(2025, 10, 8)
@@ -71,30 +71,30 @@ class DateParser:
         """
         if not date_query or not isinstance(date_query, str):
             raise InvalidParameterError(
-                "日期查询字符串不能为空",
-                suggestion="请提供有效的日期查询，如：今天、昨天、2025-10-10"
+                "Chuỗi truy vấn ngày không thể để trống",
+                suggestion="Vui lòng cung cấp truy vấn ngày hợp lệ, ví dụ: hôm nay、hôm qua、2025-10-10"
             )
 
         date_query = date_query.strip().lower()
 
-        # 1. 尝试解析中文常用相对日期
+        # 1. Thử phân tích ngày tương đối thông dụng tiếng Trung
         if date_query in DateParser.CN_DATE_MAPPING:
             days_ago = DateParser.CN_DATE_MAPPING[date_query]
             return datetime.now() - timedelta(days=days_ago)
 
-        # 2. 尝试解析英文常用相对日期
+        # 2. Thử phân tích ngày tương đối thông dụng tiếng Anh
         if date_query in DateParser.EN_DATE_MAPPING:
             days_ago = DateParser.EN_DATE_MAPPING[date_query]
             return datetime.now() - timedelta(days=days_ago)
 
-        # 3. 尝试解析 "N天前" 或 "N days ago"
+        # 3. Thử phân tích "N天前" hoặc "N days ago"
         cn_days_ago_match = re.match(r'(\d+)\s*天前', date_query)
         if cn_days_ago_match:
             days = int(cn_days_ago_match.group(1))
             if days > 365:
                 raise InvalidParameterError(
-                    f"天数过大: {days}天",
-                    suggestion="请使用小于365天的相对日期或使用绝对日期"
+                    f"Số ngày quá lớn: {days} ngày",
+                    suggestion="Vui lòng sử dụng ngày tương đối dưới 365 ngày hoặc sử dụng ngày tuyệt đối"
                 )
             return datetime.now() - timedelta(days=days)
 
@@ -103,28 +103,28 @@ class DateParser:
             days = int(en_days_ago_match.group(1))
             if days > 365:
                 raise InvalidParameterError(
-                    f"天数过大: {days}天",
-                    suggestion="请使用小于365天的相对日期或使用绝对日期"
+                    f"Số ngày quá lớn: {days} ngày",
+                    suggestion="Vui lòng sử dụng ngày tương đối dưới 365 ngày hoặc sử dụng ngày tuyệt đối"
                 )
             return datetime.now() - timedelta(days=days)
 
-        # 4. 尝试解析星期（中文）：上周一、本周三
-        cn_weekday_match = re.match(r'(上|本)周([一二三四五六日天])', date_query)
+        # 4. Thử phân tích thứ trong tuần (tiếng Trung): thứ hai tuần trước、thứ tư tuần này
+        cn_weekday_match = re.match(r'(trên|本)周([mộthaibabốnnămsáungày天])', date_query)
         if cn_weekday_match:
-            week_type = cn_weekday_match.group(1)  # 上 或 本
+            week_type = cn_weekday_match.group(1)  # trên hoặc 本
             weekday_str = cn_weekday_match.group(2)
             target_weekday = DateParser.WEEKDAY_CN[weekday_str]
-            return DateParser._get_date_by_weekday(target_weekday, week_type == "上")
+            return DateParser._get_date_by_weekday(target_weekday, week_type == "trên")
 
-        # 5. 尝试解析星期（英文）：last monday、this friday
+        # 5. Thử phân tích thứ trong tuần (tiếng Anh): last monday、this friday
         en_weekday_match = re.match(r'(last|this)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)', date_query)
         if en_weekday_match:
-            week_type = en_weekday_match.group(1)  # last 或 this
+            week_type = en_weekday_match.group(1)  # last hoặc this
             weekday_str = en_weekday_match.group(2)
             target_weekday = DateParser.WEEKDAY_EN[weekday_str]
             return DateParser._get_date_by_weekday(target_weekday, week_type == "last")
 
-        # 6. 尝试解析绝对日期：YYYY-MM-DD
+        # 6. Thử phân tích ngày tuyệt đối: YYYY-MM-DD
         iso_date_match = re.match(r'(\d{4})-(\d{1,2})-(\d{1,2})', date_query)
         if iso_date_match:
             year = int(iso_date_match.group(1))
@@ -134,23 +134,23 @@ class DateParser:
                 return datetime(year, month, day)
             except ValueError as e:
                 raise InvalidParameterError(
-                    f"无效的日期: {date_query}",
-                    suggestion=f"日期值错误: {str(e)}"
+                    f"Ngày không hợp lệ: {date_query}",
+                    suggestion=f"Lỗi giá trị ngày: {str(e)}"
                 )
 
-        # 7. 尝试解析中文日期：MM月DD日 或 YYYY年MM月DD日
-        cn_date_match = re.match(r'(?:(\d{4})年)?(\d{1,2})月(\d{1,2})日', date_query)
+        # 7. Thử phân tích ngày tiếng Trung: MMthángDDngày hoặc YYYYnămMMthángDDngày
+        cn_date_match = re.match(r'(?:(\d{4})năm)?(\d{1,2})tháng(\d{1,2})ngày', date_query)
         if cn_date_match:
             year_str = cn_date_match.group(1)
             month = int(cn_date_match.group(2))
             day = int(cn_date_match.group(3))
 
-            # 如果没有年份，使用当前年份
+            # Nếu không có năm, sử dụng năm hiện tại
             if year_str:
                 year = int(year_str)
             else:
                 year = datetime.now().year
-                # 如果月份大于当前月份，说明是去年
+                # Nếu tháng lớn hơn tháng hiện tại, nghĩa là năm trước
                 current_month = datetime.now().month
                 if month > current_month:
                     year -= 1
@@ -159,11 +159,11 @@ class DateParser:
                 return datetime(year, month, day)
             except ValueError as e:
                 raise InvalidParameterError(
-                    f"无效的日期: {date_query}",
-                    suggestion=f"日期值错误: {str(e)}"
+                    f"Ngày không hợp lệ: {date_query}",
+                    suggestion=f"Lỗi giá trị ngày: {str(e)}"
                 )
 
-        # 8. 尝试解析斜杠格式：YYYY/MM/DD 或 MM/DD
+        # 8. Thử phân tích định dạng dấu gạch chéo: YYYY/MM/DD hoặc MM/DD
         slash_date_match = re.match(r'(?:(\d{4})/)?(\d{1,2})/(\d{1,2})', date_query)
         if slash_date_match:
             year_str = slash_date_match.group(1)
@@ -182,42 +182,42 @@ class DateParser:
                 return datetime(year, month, day)
             except ValueError as e:
                 raise InvalidParameterError(
-                    f"无效的日期: {date_query}",
-                    suggestion=f"日期值错误: {str(e)}"
+                    f"Ngày không hợp lệ: {date_query}",
+                    suggestion=f"Lỗi giá trị ngày: {str(e)}"
                 )
 
-        # 如果所有格式都不匹配
+        # Nếu tất cả định dạng đều không khớp
         raise InvalidParameterError(
-            f"无法识别的日期格式: {date_query}",
+            f"Không thể nhận dạng định dạng ngày: {date_query}",
             suggestion=(
-                "支持的格式:\n"
-                "- 相对日期: 今天、昨天、前天、3天前、today、yesterday、3 days ago\n"
-                "- 星期: 上周一、本周三、last monday、this friday\n"
-                "- 绝对日期: 2025-10-10、10月10日、2025年10月10日"
+                "Các định dạng được hỗ trợ:\n"
+                "- Ngày tương đối: hôm nay、hôm qua、hôm kia、3天前、today、yesterday、3 days ago\n"
+                "- Thứ trong tuần: thứ hai tuần trước, thứ tư tuần này, last monday, this friday\n"
+                "- Ngày tuyệt đối: 2025-10-10, 10 tháng 10, 2025 năm 10 tháng 10"
             )
         )
 
     @staticmethod
     def _get_date_by_weekday(target_weekday: int, is_last_week: bool) -> datetime:
         """
-        根据星期几获取日期
+        Lấy ngày dựa trên thứ trong tuần
 
         Args:
-            target_weekday: 目标星期 (0=周一, 6=周日)
-            is_last_week: 是否是上周
+            target_weekday: Thứ mục tiêu (0=Thứ Hai, 6=Chủ Nhật)
+            is_last_week: Có phải tuần trước không
 
         Returns:
-            datetime对象
+            Đối tượng datetime
         """
         today = datetime.now()
         current_weekday = today.weekday()
 
-        # 计算天数差
+        # Tính toán chênh lệch số ngày
         if is_last_week:
-            # 上周的某一天
+            # Một ngày nào đó của tuần trước
             days_diff = current_weekday - target_weekday + 7
         else:
-            # 本周的某一天
+            # Một ngày nào đó của tuần này
             days_diff = current_weekday - target_weekday
             if days_diff < 0:
                 days_diff += 7
@@ -227,52 +227,52 @@ class DateParser:
     @staticmethod
     def format_date_folder(date: datetime) -> str:
         """
-        将日期格式化为文件夹名称
+        Định dạng ngày thành tên thư mục
 
         Args:
-            date: datetime对象
+            date: Đối tượng datetime
 
         Returns:
-            文件夹名称，格式: YYYY年MM月DD日
+            Tên thư mục, định dạng: YYYY năm MM tháng DD ngày
 
-        Examples:
+        Ví dụ:
             >>> DateParser.format_date_folder(datetime(2025, 10, 11))
-            '2025年10月11日'
+            '2025năm10tháng11ngày'
         """
-        return date.strftime("%Y年%m月%d日")
+        return date.strftime("%Ynăm%mtháng%dngày")
 
     @staticmethod
     def validate_date_not_future(date: datetime) -> None:
         """
-        验证日期不在未来
+        Xác thực ngày không nằm trong tương lai
 
         Args:
-            date: 待验证的日期
+            date: Ngày cần xác thực
 
         Raises:
-            InvalidParameterError: 日期在未来
+            InvalidParameterError: Ngày nằm trong tương lai
         """
         if date.date() > datetime.now().date():
             raise InvalidParameterError(
-                f"不能查询未来的日期: {date.strftime('%Y-%m-%d')}",
-                suggestion="请使用今天或过去的日期"
+                f"Không thể truy vấn ngày trong tương lai: {date.strftime('%Y-%m-%d')}",
+                suggestion="Vui lòng sử dụng ngày hôm nay hoặc ngày trong quá khứ"
             )
 
     @staticmethod
     def validate_date_not_too_old(date: datetime, max_days: int = 365) -> None:
         """
-        验证日期不太久远
+        Xác thực ngày không quá xa trong quá khứ
 
         Args:
-            date: 待验证的日期
-            max_days: 最大天数
+            date: Ngày cần xác thực
+            max_days: Số ngày tối đa
 
         Raises:
-            InvalidParameterError: 日期太久远
+            InvalidParameterError: Ngày quá xa trong quá khứ
         """
         days_ago = (datetime.now().date() - date.date()).days
         if days_ago > max_days:
             raise InvalidParameterError(
-                f"日期太久远: {date.strftime('%Y-%m-%d')} ({days_ago}天前)",
-                suggestion=f"请查询{max_days}天内的数据"
+                f"Ngày quá xa: {date.strftime('%Y-%m-%d')} ({days_ago} ngày trước)",
+                suggestion=f"Vui lòng truy vấn dữ liệu trong vòng {max_days} ngày"
             )

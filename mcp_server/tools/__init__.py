@@ -1,5 +1,5 @@
 """
-MCP 工具模块
+Module công cụ MCP
 
-包含所有MCP工具的实现。
+Chứa triển khai tất cả công cụ MCP。
 """

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-新闻爬虫容器管理工具 - supercronic
+Công cụ quản lý container crawler tin tức - supercronic
 """
 
 import os
@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 def run_command(cmd, shell=True, capture_output=True):
-    """执行系统命令"""
+    """Thực thi lệnh hệ thống"""
     try:
         result = subprocess.run(
             cmd, shell=shell, capture_output=capture_output, text=True
@@ -23,22 +23,22 @@ def run_command(cmd, shell=True, capture_output=True):
 
 
 def manual_run():
-    """手动执行一次爬虫"""
-    print("🔄 手动执行爬虫...")
+    """Thực thi crawler thủ công một lần"""
+    print("🔄 Thực thi crawler thủ công...")
     try:
         result = subprocess.run(
             ["python", "main.py"], cwd="/app", capture_output=False, text=True
         )
         if result.returncode == 0:
-            print("✅ 执行完成")
+            print("✅ Thực thi hoàn thành")
         else:
-            print(f"❌ 执行失败，退出码: {result.returncode}")
+            print(f"❌ 执行thất bại，退出码: {result.returncode}")
     except Exception as e:
         print(f"❌ 执行出错: {e}")
 
 
 def parse_cron_schedule(cron_expr):
-    """解析cron表达式并返回人类可读的描述"""
+    """解析cron表达式并返回người类có thể读của描述"""
     if not cron_expr or cron_expr == "未设置":
         return "未设置"
     
@@ -49,66 +49,66 @@ def parse_cron_schedule(cron_expr):
         
         minute, hour, day, month, weekday = parts
         
-        # 分析分钟
+        # phân tíchphút钟
         if minute == "*":
-            minute_desc = "每分钟"
+            minute_desc = "每phút钟"
         elif minute.startswith("*/"):
             interval = minute[2:]
-            minute_desc = f"每{interval}分钟"
+            minute_desc = f"每{interval}phút钟"
         elif "," in minute:
-            minute_desc = f"在第{minute}分钟"
+            minute_desc = f"ở第{minute}phút钟"
         else:
-            minute_desc = f"在第{minute}分钟"
+            minute_desc = f"ở第{minute}phút钟"
         
-        # 分析小时
+        # phân tích小giờ
         if hour == "*":
-            hour_desc = "每小时"
+            hour_desc = "每小giờ"
         elif hour.startswith("*/"):
             interval = hour[2:]
-            hour_desc = f"每{interval}小时"
+            hour_desc = f"每{interval}小giờ"
         elif "," in hour:
-            hour_desc = f"在{hour}点"
+            hour_desc = f"ở{hour}点"
         else:
-            hour_desc = f"在{hour}点"
+            hour_desc = f"ở{hour}点"
         
-        # 分析日期
+        # phân tíchngày
         if day == "*":
             day_desc = "每天"
         elif day.startswith("*/"):
             interval = day[2:]
             day_desc = f"每{interval}天"
         else:
-            day_desc = f"每月{day}号"
+            day_desc = f"每tháng{day}号"
         
-        # 分析月份
+        # phân tíchtháng份
         if month == "*":
-            month_desc = "每月"
+            month_desc = "每tháng"
         else:
-            month_desc = f"在{month}月"
+            month_desc = f"ở{month}tháng"
         
-        # 分析星期
+        # phân tích星期
         weekday_names = {
-            "0": "周日", "1": "周一", "2": "周二", "3": "周三", 
-            "4": "周四", "5": "周五", "6": "周六", "7": "周日"
+            "0": "周ngày", "1": "周một", "2": "周hai", "3": "周ba", 
+            "4": "周bốn", "5": "周năm", "6": "周sáu", "7": "周ngày"
         }
         if weekday == "*":
             weekday_desc = ""
         else:
-            weekday_desc = f"在{weekday_names.get(weekday, weekday)}"
+            weekday_desc = f"ở{weekday_names.get(weekday, weekday)}"
         
         # 组合描述
         if minute.startswith("*/") and hour == "*" and day == "*" and month == "*" and weekday == "*":
-            # 简单的间隔模式，如 */30 * * * *
-            return f"每{minute[2:]}分钟执行一次"
+            # 简单của间隔Chế độ，如 */30 * * * *
+            return f"每{minute[2:]}phút钟执行mộtlần"
         elif hour != "*" and minute != "*" and day == "*" and month == "*" and weekday == "*":
-            # 每天特定时间，如 0 9 * * *
+            # 每天特定thời gian，如 0 9 * * *
             return f"每天{hour}:{minute.zfill(2)}执行"
         elif weekday != "*" and day == "*":
-            # 每周特定时间
+            # 每周特定thời gian
             return f"{weekday_desc}{hour}:{minute.zfill(2)}执行"
         else:
-            # 复杂模式，显示详细信息
-            desc_parts = [part for part in [month_desc, day_desc, weekday_desc, hour_desc, minute_desc] if part and part != "每月" and part != "每天" and part != "每小时"]
+            # 复杂Chế độ，显示详细thông tin
+            desc_parts = [part for part in [month_desc, day_desc, weekday_desc, hour_desc, minute_desc] if part and part != "每tháng" and part != "每天" and part != "每小giờ"]
             if desc_parts:
                 return " ".join(desc_parts) + "执行"
             else:
@@ -131,72 +131,72 @@ def show_status():
         print(f"  🔍 PID 1 进程: {pid1_cmdline}")
         
         if "supercronic" in pid1_cmdline.lower():
-            print("  ✅ supercronic 正确运行为 PID 1")
+            print("  ✅ supercronic 正确运行vì PID 1")
             supercronic_is_pid1 = True
         else:
-            print("  ❌ PID 1 不是 supercronic")
-            print(f"  📋 实际的 PID 1: {pid1_cmdline}")
+            print("  ❌ PID 1 khônglà supercronic")
+            print(f"  📋 实际của PID 1: {pid1_cmdline}")
     except Exception as e:
-        print(f"  ❌ 无法读取 PID 1 信息: {e}")
+        print(f"  ❌ 无法đọc PID 1 thông tin: {e}")
 
-    # 检查环境变量
+    # 检查môi trườngbiến
     cron_schedule = os.environ.get("CRON_SCHEDULE", "未设置")
     run_mode = os.environ.get("RUN_MODE", "未设置")
     immediate_run = os.environ.get("IMMEDIATE_RUN", "未设置")
     
-    print(f"  ⚙️ 运行配置:")
+    print(f"  ⚙️ 运行cấu hình:")
     print(f"    CRON_SCHEDULE: {cron_schedule}")
     
-    # 解析并显示cron表达式的含义
+    # Phân tích并显示cron表达式của含义
     cron_description = parse_cron_schedule(cron_schedule)
     print(f"    ⏰ 执行频率: {cron_description}")
     
     print(f"    RUN_MODE: {run_mode}")
     print(f"    IMMEDIATE_RUN: {immediate_run}")
 
-    # 检查配置文件
+    # 检查File cấu hình
     config_files = ["/app/config/config.yaml", "/app/config/frequency_words.txt"]
-    print("  📁 配置文件:")
+    print("  📁 File cấu hình:")
     for file_path in config_files:
         if Path(file_path).exists():
             print(f"    ✅ {Path(file_path).name}")
         else:
             print(f"    ❌ {Path(file_path).name} 缺失")
 
-    # 检查关键文件
+    # 检查关键file
     key_files = [
-        ("/usr/local/bin/supercronic-linux-amd64", "supercronic二进制文件"),
+        ("/usr/local/bin/supercronic-linux-amd64", "supercronichai进制file"),
         ("/usr/local/bin/supercronic", "supercronic软链接"),
-        ("/tmp/crontab", "crontab文件"),
+        ("/tmp/crontab", "crontabfile"),
         ("/entrypoint.sh", "启动脚本")
     ]
     
-    print("  📂 关键文件检查:")
+    print("  📂 关键file检查:")
     for file_path, description in key_files:
         if Path(file_path).exists():
-            print(f"    ✅ {description}: 存在")
-            # 对于crontab文件，显示内容
+            print(f"    ✅ {description}: 存ở")
+            # Đối vớicrontabfile，显示nội dung
             if file_path == "/tmp/crontab":
                 try:
                     with open(file_path, 'r') as f:
                         crontab_content = f.read().strip()
-                        print(f"         内容: {crontab_content}")
+                        print(f"         nội dung: {crontab_content}")
                 except:
                     pass
         else:
-            print(f"    ❌ {description}: 不存在")
+            print(f"    ❌ {description}: không tồn tại")
 
-    # 检查容器运行时间
-    print("  ⏱️ 容器时间信息:")
+    # 检查容器运行thời gian
+    print("  ⏱️ 容器thời gianthông tin:")
     try:
-        # 检查 PID 1 的启动时间
+        # 检查 PID 1 củakhởi độngthời gian
         with open('/proc/1/stat', 'r') as f:
             stat_content = f.read().strip().split()
             if len(stat_content) >= 22:
-                # starttime 是第22个字段（索引21）
+                # starttime là第22个字段（索引21）
                 starttime_ticks = int(stat_content[21])
                 
-                # 读取系统启动时间
+                # đọc系统khởi độngthời gian
                 with open('/proc/stat', 'r') as stat_f:
                     for line in stat_f:
                         if line.startswith('btime'):
@@ -205,7 +205,7 @@ def show_status():
                     else:
                         boot_time = 0
                 
-                # 读取系统时钟频率
+                # đọc系统giờ钟频率
                 clock_ticks = os.sysconf(os.sysconf_names['SC_CLK_TCK'])
                 
                 if boot_time > 0:
@@ -216,57 +216,57 @@ def show_status():
                     uptime_hours = uptime_minutes // 60
                     
                     if uptime_hours > 0:
-                        print(f"    PID 1 运行时间: {uptime_hours} 小时 {uptime_minutes % 60} 分钟")
+                        print(f"    PID 1 运行thời gian: {uptime_hours} 小giờ {uptime_minutes % 60} phút钟")
                     else:
-                        print(f"    PID 1 运行时间: {uptime_minutes} 分钟 ({uptime_seconds} 秒)")
+                        print(f"    PID 1 运行thời gian: {uptime_minutes} phút钟 ({uptime_seconds} 秒)")
                 else:
-                    print(f"    PID 1 运行时间: 无法精确计算")
+                    print(f"    PID 1 运行thời gian: 无法精确tính toán")
             else:
-                print("    ❌ 无法解析 PID 1 统计信息")
+                print("    ❌ 无法Phân tích PID 1 thống kêthông tin")
     except Exception as e:
-        print(f"    ❌ 时间检查失败: {e}")
+        print(f"    ❌ thời gian检查thất bại: {e}")
 
-    # 状态总结和建议
+    # 状态总结và建议
     print("  📊 状态总结:")
     if supercronic_is_pid1:
-        print("    ✅ supercronic 正确运行为 PID 1")
-        print("    ✅ 定时任务应该正常工作")
+        print("    ✅ supercronic 正确运行vì PID 1")
+        print("    ✅ 定giờ任务应该正常工作")
         
-        # 显示当前的调度信息
+        # 显示hiện tạicủa调度thông tin
         if cron_schedule != "未设置":
-            print(f"    ⏰ 当前调度: {cron_description}")
+            print(f"    ⏰ hiện tại调度: {cron_description}")
             
-            # 提供一些常见的调度建议
-            if "分钟" in cron_description and "每30分钟" not in cron_description and "每60分钟" not in cron_description:
-                print("    💡 频繁执行模式，适合实时监控")
-            elif "小时" in cron_description:
-                print("    💡 按小时执行模式，适合定期汇总")
+            # 提供một些常见của调度建议
+            if "phút钟" in cron_description and "每30phút钟" not in cron_description and "每60phút钟" not in cron_description:
+                print("    💡 频繁执行Chế độ，适合实giờ监控")
+            elif "小giờ" in cron_description:
+                print("    💡 theo小giờ执行Chế độ，适合定期tổng hợp")
             elif "天" in cron_description:
-                print("    💡 每日执行模式，适合日报生成")
+                print("    💡 每ngày执行Chế độ，适合ngày报tạo")
         
-        print("    💡 如果定时任务不执行，检查:")
-        print("       • crontab 格式是否正确")
-        print("       • 时区设置是否正确")
-        print("       • 应用程序是否有错误")
+        print("    💡 nếu定giờ任务không执行，检查:")
+        print("       • crontab định dạnglà否正确")
+        print("       • giờ区thiết lậplà否正确")
+        print("       • 应用程序là否cólỗi")
     else:
-        print("    ❌ supercronic 状态异常")
+        print("    ❌ supercronic 状态ngoại lệ")
         if pid1_cmdline:
-            print(f"    📋 当前 PID 1: {pid1_cmdline}")
+            print(f"    📋 hiện tại PID 1: {pid1_cmdline}")
         print("    💡 建议操作:")
         print("       • 重启容器: docker restart trend-radar")
-        print("       • 检查容器日志: docker logs trend-radar")
+        print("       • 检查容器nhật ký: docker logs trend-radar")
 
-    # 显示日志检查建议
+    # 显示nhật ký检查建议
     print("  📋 运行状态检查:")
-    print("    • 查看完整容器日志: docker logs trend-radar")
-    print("    • 查看实时日志: docker logs -f trend-radar")
+    print("    • 查xem完整容器nhật ký: docker logs trend-radar")
+    print("    • 查xem实giờnhật ký: docker logs -f trend-radar")
     print("    • 手动执行测试: python manage.py run")
     print("    • 重启容器服务: docker restart trend-radar")
 
 
 def show_config():
     """显示当前配置"""
-    print("⚙️ 当前配置:")
+    print("⚙️ hiện tạicấu hình:")
 
     env_vars = [
         "CRON_SCHEDULE",
@@ -283,7 +283,7 @@ def show_config():
 
     for var in env_vars:
         value = os.environ.get(var, "未设置")
-        # 隐藏敏感信息
+        # ẩn敏感thông tin
         if any(sensitive in var for sensitive in ["WEBHOOK", "TOKEN", "KEY"]):
             if value and value != "未设置":
                 masked_value = value[:10] + "***" if len(value) > 10 else "***"
@@ -295,34 +295,34 @@ def show_config():
 
     crontab_file = "/tmp/crontab"
     if Path(crontab_file).exists():
-        print("  📅 Crontab内容:")
+        print("  📅 Crontabnội dung:")
         try:
             with open(crontab_file, "r") as f:
                 content = f.read().strip()
                 print(f"    {content}")
         except Exception as e:
-            print(f"    读取失败: {e}")
+            print(f"    đọcthất bại: {e}")
     else:
-        print("  📅 Crontab文件不存在")
+        print("  📅 Crontabfilekhông tồn tại")
 
 
 def show_files():
-    """显示输出文件"""
-    print("📁 输出文件:")
+    """显示输出file"""
+    print("📁 输出file:")
 
     output_dir = Path("/app/output")
     if not output_dir.exists():
-        print("  📭 输出目录不存在")
+        print("  📭 输出thư mụckhông tồn tại")
         return
 
-    # 显示最近的文件
+    # 显示nhất近củafile
     date_dirs = sorted([d for d in output_dir.iterdir() if d.is_dir()], reverse=True)
 
     if not date_dirs:
-        print("  📭 输出目录为空")
+        print("  📭 输出thư mụcvì空")
         return
 
-    # 显示最近2天的文件
+    # 显示nhất近2天củafile
     for date_dir in date_dirs[:2]:
         print(f"  📅 {date_dir.name}:")
         for subdir in ["html", "txt"]:
@@ -333,7 +333,7 @@ def show_files():
                     recent_files = sorted(
                         files, key=lambda x: x.stat().st_mtime, reverse=True
                     )[:3]
-                    print(f"    📂 {subdir}: {len(files)} 个文件")
+                    print(f"    📂 {subdir}: {len(files)} 个file")
                     for file in recent_files:
                         mtime = time.ctime(file.stat().st_mtime)
                         size_kb = file.stat().st_size // 1024
@@ -345,49 +345,49 @@ def show_files():
 
 
 def show_logs():
-    """显示实时日志"""
-    print("📋 实时日志 (按 Ctrl+C 退出):")
-    print("💡 提示: 这将显示 PID 1 进程的输出")
+    """显示实giờngày志"""
+    print("📋 实giờnhật ký (theo Ctrl+C 退出):")
+    print("💡 提示: nàysẽ显示 PID 1 进程của输出")
     try:
-        # 尝试多种方法查看日志
+        # 尝试多种phương thức查xemnhật ký
         log_files = [
-            "/proc/1/fd/1",  # PID 1 的标准输出
-            "/proc/1/fd/2",  # PID 1 的标准错误
+            "/proc/1/fd/1",  # PID 1 của标准输出
+            "/proc/1/fd/2",  # PID 1 của标准lỗi
         ]
         
         for log_file in log_files:
             if Path(log_file).exists():
-                print(f"📄 尝试读取: {log_file}")
+                print(f"📄 尝试đọc: {log_file}")
                 subprocess.run(["tail", "-f", log_file], check=True)
                 break
         else:
-            print("📋 无法找到标准日志文件，建议使用: docker logs trend-radar")
+            print("📋 无法找đến标准nhật kýfile，建议Sử dụng: docker logs trend-radar")
             
     except KeyboardInterrupt:
-        print("\n👋 退出日志查看")
+        print("\n👋 退出nhật ký查xem")
     except Exception as e:
-        print(f"❌ 查看日志失败: {e}")
-        print("💡 建议使用: docker logs trend-radar")
+        print(f"❌ 查xemnhật kýthất bại: {e}")
+        print("💡 建议Sử dụng: docker logs trend-radar")
 
 
 def restart_supercronic():
     """重启supercronic进程"""
     print("🔄 重启supercronic...")
-    print("⚠️ 注意: supercronic 是 PID 1，无法直接重启")
+    print("⚠️ 注意: supercronic là PID 1，无法直接重启")
     
-    # 检查当前 PID 1
+    # 检查hiện tại PID 1
     try:
         with open('/proc/1/cmdline', 'r') as f:
             pid1_cmdline = f.read().replace('\x00', ' ').strip()
-        print(f"  🔍 当前 PID 1: {pid1_cmdline}")
+        print(f"  🔍 hiện tại PID 1: {pid1_cmdline}")
         
         if "supercronic" in pid1_cmdline.lower():
-            print("  ✅ PID 1 是 supercronic")
-            print("  💡 要重启 supercronic，需要重启整个容器:")
+            print("  ✅ PID 1 là supercronic")
+            print("  💡 muốn重启 supercronic，需muốn重启整个容器:")
             print("    docker restart trend-radar")
         else:
-            print("  ❌ PID 1 不是 supercronic，这是异常状态")
-            print("  💡 建议重启容器以修复问题:")
+            print("  ❌ PID 1 khônglà supercronic，nàylàngoại lệ状态")
+            print("  💡 建议重启容器để修复问题:")
             print("    docker restart trend-radar")
     except Exception as e:
         print(f"  ❌ 无法检查 PID 1: {e}")
@@ -400,42 +400,42 @@ def show_help():
 🐳 TrendRadar 容器管理工具
 
 📋 命令列表:
-  run         - 手动执行一次爬虫
+  run         - Thực thi crawler thủ công một lần
   status      - 显示容器运行状态
   config      - 显示当前配置
-  files       - 显示输出文件
-  logs        - 实时查看日志
-  restart     - 重启说明
+  files       - 显示输出file
+  logs        - 实giờ查xemngày志
+  restart     - 重启nói明
   help        - 显示此帮助
 
-📖 使用示例:
-  # 在容器中执行
+📖 Sử dụng示例:
+  # ở容器trong执行
   python manage.py run
   python manage.py status
   python manage.py logs
   
-  # 在宿主机执行
+  # ở宿主机执行
   docker exec -it trend-radar python manage.py run
   docker exec -it trend-radar python manage.py status
   docker logs trend-radar
 
 💡 常用操作指南:
   1. 检查运行状态: status
-     - 查看 supercronic 是否为 PID 1
-     - 检查配置文件和关键文件
-     - 查看 cron 调度设置
+     - 查xem supercronic là否vì PID 1
+     - 检查File cấu hìnhvà关键file
+     - 查xem cron 调度设置
   
   2. 手动执行测试: run  
-     - 立即执行一次新闻爬取
-     - 测试程序是否正常工作
+     - 立即执行mộtlầntin tứcthu thập
+     - 测试程序là否正常工作
   
-  3. 查看日志: logs
-     - 实时监控运行情况
-     - 也可使用: docker logs trend-radar
+  3. 查xemngày志: logs
+     - 实giờ监控运行情况
+     - cũngcó thểSử dụng: docker logs trend-radar
   
   4. 重启服务: restart
-     - 由于 supercronic 是 PID 1，需要重启整个容器
-     - 使用: docker restart trend-radar
+     - doở supercronic là PID 1，需muốn重启整个容器
+     - Sử dụng: docker restart trend-radar
 """
     print(help_text)
 
@@ -460,12 +460,12 @@ def main():
         try:
             commands[command]()
         except KeyboardInterrupt:
-            print("\n👋 操作已取消")
+            print("\n👋 操作đãhủy")
         except Exception as e:
             print(f"❌ 执行出错: {e}")
     else:
         print(f"❌ 未知命令: {command}")
-        print("运行 'python manage.py help' 查看可用命令")
+        print("运行 'python manage.py help' 查xemcó thể用命令")
 
 
 if __name__ == "__main__":

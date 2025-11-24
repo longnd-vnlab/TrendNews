@@ -1,7 +1,7 @@
 """
-数据访问服务
+Dịch vụ truy cập dữ liệu
 
-提供统一的数据查询接口,封装数据访问逻辑。
+Cung cấp giao diện truy vấn dữ liệu thống nhất, đóng gói logic truy cập dữ liệu.
 """
 
 import re
@@ -15,14 +15,14 @@ from ..utils.errors import DataNotFoundError
 
 
 class DataService:
-    """数据访问服务类"""
+    """Lớp dịch vụ truy cập dữ liệu"""
 
     def __init__(self, project_root: str = None):
         """
-        初始化数据服务
+        Khởi tạo dịch vụ dữ liệu
 
         Args:
-            project_root: 项目根目录
+            project_root: Thư mục gốc của dự án
         """
         self.parser = ParserService(project_root)
         self.cache = get_cache()
@@ -34,45 +34,45 @@ class DataService:
         include_url: bool = False
     ) -> List[Dict]:
         """
-        获取最新一批爬取的新闻数据
+        Lấy dữ liệu tin tức từ đợt thu thập mới nhất
 
         Args:
-            platforms: 平台ID列表,None表示所有平台
-            limit: 返回条数限制
-            include_url: 是否包含URL链接,默认False(节省token)
+            platforms: Danh sách ID nền tảng, None nghĩa là tất cả nền tảng
+            limit: Giới hạn số lượng trả về
+            include_url: Có bao gồm liên kết URL không, mặc định False (tiết kiệm token)
 
         Returns:
-            新闻列表
+            Danh sách tin tức
 
         Raises:
-            DataNotFoundError: 数据不存在
+            DataNotFoundError: Dữ liệu không tồn tại
         """
-        # 尝试从缓存获取
+        # Thử lấy từ cache
         cache_key = f"latest_news:{','.join(platforms or [])}:{limit}:{include_url}"
-        cached = self.cache.get(cache_key, ttl=900)  # 15分钟缓存
+        cached = self.cache.get(cache_key, ttl=900)  # Cache 15 phút
         if cached:
             return cached
 
-        # 读取今天的数据
+        # Đọc dữ liệu hôm nay
         all_titles, id_to_name, timestamps = self.parser.read_all_titles_for_date(
             date=None,
             platform_ids=platforms
         )
 
-        # 获取最新的文件时间
+        # Lấy thời gian file mới nhất
         if timestamps:
             latest_timestamp = max(timestamps.values())
             fetch_time = datetime.fromtimestamp(latest_timestamp)
         else:
             fetch_time = datetime.now()
 
-        # 转换为新闻列表
+        # Chuyển đổi thành danh sách tin tức
         news_list = []
         for platform_id, titles in all_titles.items():
             platform_name = id_to_name.get(platform_id, platform_id)
 
             for title, info in titles.items():
-                # 取第一个排名
+                # Lấy thứ hạng đầu tiên
                 rank = info["ranks"][0] if info["ranks"] else 0
 
                 news_item = {
@@ -83,20 +83,20 @@ class DataService:
                     "timestamp": fetch_time.strftime("%Y-%m-%d %H:%M:%S")
                 }
 
-                # 条件性添加 URL 字段
+                # Thêm trường URL có điều kiện
                 if include_url:
                     news_item["url"] = info.get("url", "")
                     news_item["mobileUrl"] = info.get("mobileUrl", "")
 
                 news_list.append(news_item)
 
-        # 按排名排序
+        # Sắp xếp theo thứ hạng
         news_list.sort(key=lambda x: x["rank"])
 
-        # 限制返回数量
+        # Giới hạn số lượng trả về
         result = news_list[:limit]
 
-        # 缓存结果
+        # Lưu kết quả vào cache
         self.cache.set(cache_key, result)
 
         return result
@@ -109,19 +109,19 @@ class DataService:
         include_url: bool = False
     ) -> List[Dict]:
         """
-        按指定日期获取新闻
+        Lấy tin tức theo ngày chỉ định
 
         Args:
-            target_date: 目标日期
-            platforms: 平台ID列表,None表示所有平台
-            limit: 返回条数限制
-            include_url: 是否包含URL链接,默认False(节省token)
+            target_date: Ngày mục tiêu
+            platforms: Danh sách ID nền tảng, None nghĩa là tất cả nền tảng
+            limit: Giới hạn số lượng trả về
+            include_url: Có bao gồm liên kết URL không, mặc định False (tiết kiệm token)
 
         Returns:
-            新闻列表
+            Danh sách tin tức
 
         Raises:
-            DataNotFoundError: 数据不存在
+            DataNotFoundError: Dữ liệu không tồn tại
 
         Examples:
             >>> service = DataService()
@@ -131,26 +131,26 @@ class DataService:
             ...     limit=20
             ... )
         """
-        # 尝试从缓存获取
+        # Thử lấy từ cache
         date_str = target_date.strftime("%Y-%m-%d")
         cache_key = f"news_by_date:{date_str}:{','.join(platforms or [])}:{limit}:{include_url}"
-        cached = self.cache.get(cache_key, ttl=1800)  # 30分钟缓存
+        cached = self.cache.get(cache_key, ttl=1800)  # Cache 30 phút
         if cached:
             return cached
 
-        # 读取指定日期的数据
+        # Đọc dữ liệu của ngày chỉ định
         all_titles, id_to_name, timestamps = self.parser.read_all_titles_for_date(
             date=target_date,
             platform_ids=platforms
         )
 
-        # 转换为新闻列表
+        # Chuyển đổi thành danh sách tin tức
         news_list = []
         for platform_id, titles in all_titles.items():
             platform_name = id_to_name.get(platform_id, platform_id)
 
             for title, info in titles.items():
-                # 计算平均排名
+                # Tính thứ hạng trung bình
                 avg_rank = sum(info["ranks"]) / len(info["ranks"]) if info["ranks"] else 0
 
                 news_item = {
@@ -163,20 +163,20 @@ class DataService:
                     "date": date_str
                 }
 
-                # 条件性添加 URL 字段
+                # Thêm trường URL có điều kiện
                 if include_url:
                     news_item["url"] = info.get("url", "")
                     news_item["mobileUrl"] = info.get("mobileUrl", "")
 
                 news_list.append(news_item)
 
-        # 按排名排序
+        # Sắp xếp theo thứ hạng
         news_list.sort(key=lambda x: x["rank"])
 
-        # 限制返回数量
+        # Giới hạn số lượng trả về
         result = news_list[:limit]
 
-        # 缓存结果(历史数据缓存更久)
+        # Lưu kết quả vào cache (dữ liệu lịch sử cache lâu hơn)
         self.cache.set(cache_key, result)
 
         return result
@@ -189,32 +189,32 @@ class DataService:
         limit: Optional[int] = None
     ) -> Dict:
         """
-        按关键词搜索新闻
+        Tìm kiếm tin tức theo từ khóa
 
         Args:
-            keyword: 搜索关键词
-            date_range: 日期范围 (start_date, end_date)
-            platforms: 平台过滤列表
-            limit: 返回条数限制(可选)
+            keyword: Từ khóa tìm kiếm
+            date_range: Phạm vi ngày (start_date, end_date)
+            platforms: Danh sách nền tảng để lọc
+            limit: Giới hạn số lượng trả về (tùy chọn)
 
         Returns:
-            搜索结果字典
+            Dictionary kết quả tìm kiếm
 
         Raises:
-            DataNotFoundError: 数据不存在
+            DataNotFoundError: Dữ liệu không tồn tại
         """
-        # 确定搜索日期范围
+        # Xác định phạm vi ngày tìm kiếm
         if date_range:
             start_date, end_date = date_range
         else:
-            # 默认搜索今天
+            # Mặc định tìm kiếm hôm nay
             start_date = end_date = datetime.now()
 
-        # 收集所有匹配的新闻
+        # Thu thập tất cả tin tức khớp
         results = []
         platform_distribution = Counter()
 
-        # 遍历日期范围
+        # Duyệt qua phạm vi ngày
         current_date = start_date
         while current_date <= end_date:
             try:
@@ -223,13 +223,13 @@ class DataService:
                     platform_ids=platforms
                 )
 
-                # 搜索包含关键词的标题
+                # Tìm kiếm tiêu đề chứa từ khóa
                 for platform_id, titles in all_titles.items():
                     platform_name = id_to_name.get(platform_id, platform_id)
 
                     for title, info in titles.items():
                         if keyword.lower() in title.lower():
-                            # 计算平均排名
+                            # Tính thứ hạng trung bình
                             avg_rank = sum(info["ranks"]) / len(info["ranks"]) if info["ranks"] else 0
 
                             results.append({
@@ -247,26 +247,26 @@ class DataService:
                             platform_distribution[platform_id] += 1
 
             except DataNotFoundError:
-                # 该日期没有数据,继续下一天
+                # Ngày đó không có dữ liệu, tiếp tục ngày tiếp theo
                 pass
 
-            # 下一天
+            # Ngày tiếp theo
             current_date += timedelta(days=1)
 
         if not results:
             raise DataNotFoundError(
-                f"未找到包含关键词 '{keyword}' 的新闻",
-                suggestion="请尝试其他关键词或扩大日期范围"
+                f"Không tìm thấy tin tức chứa từ khóa '{keyword}'",
+                suggestion="Vui lòng thử từ khóa khác hoặc mở rộng phạm vi ngày"
             )
 
-        # 计算统计信息
+        # Tính thông tin thống kê
         total_ranks = []
         for item in results:
             total_ranks.extend(item["ranks"])
 
         avg_rank = sum(total_ranks) / len(total_ranks) if total_ranks else 0
 
-        # 限制返回数量(如果指定)
+        # Giới hạn số lượng trả về (nếu được chỉ định)
         total_found = len(results)
         if limit is not None and limit > 0:
             results = results[:limit]
@@ -288,77 +288,77 @@ class DataService:
         mode: str = "current"
     ) -> Dict:
         """
-        获取个人关注词的新闻出现频率统计
+        Lấy thống kê tần suất xuất hiện của các từ khóa quan tâm cá nhân
 
-        注意:本工具基于 config/frequency_words.txt 中的个人关注词列表进行统计,
-        而不是自动从新闻中提取热点话题。用户可以自定义这个关注词列表。
+        Lưu ý: Công cụ này dựa trên danh sách từ khóa quan tâm cá nhân trong config/frequency_words.txt,
+        không phải tự động trích xuất chủ đề hot từ tin tức. Người dùng có thể tùy chỉnh danh sách từ khóa này.
 
         Args:
-            top_n: 返回TOP N关注词
-            mode: 模式 - daily(当日累计), current(最新一批)
+            top_n: Trả về TOP N từ khóa quan tâm
+            mode: Chế độ - daily (tích lũy trong ngày), current (đợt mới nhất)
 
         Returns:
-            关注词频率统计字典
+            Dictionary thống kê tần suất từ khóa quan tâm
 
         Raises:
-            DataNotFoundError: 数据不存在
+            DataNotFoundError: Dữ liệu không tồn tại
         """
-        # 尝试从缓存获取
+        # Thử lấy từ cache
         cache_key = f"trending_topics:{top_n}:{mode}"
-        cached = self.cache.get(cache_key, ttl=1800)  # 30分钟缓存
+        cached = self.cache.get(cache_key, ttl=1800)  # Cache 30 phút
         if cached:
             return cached
 
-        # 读取今天的数据
+        # Đọc dữ liệu hôm nay
         all_titles, id_to_name, timestamps = self.parser.read_all_titles_for_date()
 
         if not all_titles:
             raise DataNotFoundError(
-                "未找到今天的新闻数据",
-                suggestion="请确保爬虫已经运行并生成了数据"
+                "Không tìm thấy dữ liệu tin tức hôm nay",
+                suggestion="Vui lòng đảm bảo crawler đã chạy và tạo dữ liệu"
             )
 
-        # 加载关键词配置
+        # Tải cấu hình từ khóa
         word_groups = self.parser.parse_frequency_words()
 
-        # 根据mode选择要处理的标题数据
+        # Chọn dữ liệu tiêu đề để xử lý theo mode
         titles_to_process = {}
 
         if mode == "daily":
-            # daily模式:处理当天所有累计数据
+            # Chế độ daily: xử lý tất cả dữ liệu tích lũy trong ngày
             titles_to_process = all_titles
 
         elif mode == "current":
-            # current模式:只处理最新一批数据(最新时间戳的文件)
+            # Chế độ current: chỉ xử lý đợt dữ liệu mới nhất (timestamp mới nhất)
             if timestamps:
-                # 找出最新的时间戳
+                # Tìm timestamp mới nhất
                 latest_timestamp = max(timestamps.values())
 
-                # 重新读取,只获取最新时间的数据
-                # 这里我们通过timestamps字典反查找最新文件对应的平台
+                # Đọc lại, chỉ lấy dữ liệu thời gian mới nhất
+                # Ở đây ta tra ngược timestamps để tìm nền tảng tương ứng với file mới nhất
                 latest_titles, _, _ = self.parser.read_all_titles_for_date()
 
-                # 由于read_all_titles_for_date返回所有文件的合并数据,
-                # 我们需要通过timestamps来过滤出最新批次
-                # 简化实现:使用当前所有数据作为最新批次
-                # (更精确的实现需要解析服务支持按时间过滤)
+                # Vì read_all_titles_for_date trả về dữ liệu hợp nhất của tất cả file,
+                # chúng ta cần lọc theo timestamps để lấy đợt mới nhất
+                # Đơn giản hóa: sử dụng tất cả dữ liệu hiện tại làm đợt mới nhất
+                # (triển khai chính xác hơn cần dịch vụ phân tích hỗ trợ lọc theo thời gian)
                 titles_to_process = latest_titles
             else:
                 titles_to_process = all_titles
 
         else:
             raise ValueError(
-                f"不支持的模式: {mode}。支持的模式: daily, current"
+                f"Chế độ không được hỗ trợ: {mode}. Các chế độ hỗ trợ: daily, current"
             )
 
-        # 统计词频
+        # Thống kê tần suất từ
         word_frequency = Counter()
         keyword_to_news = {}
 
-        # 遍历要处理的标题
+        # Duyệt qua các tiêu đề cần xử lý
         for platform_id, titles in titles_to_process.items():
             for title in titles.keys():
-                # 对每个关键词组进行匹配
+                # Khớp với từng nhóm từ khóa
                 for group in word_groups:
                     all_words = group.get("required", []) + group.get("normal", [])
 
@@ -370,10 +370,10 @@ class DataService:
                                 keyword_to_news[word] = []
                             keyword_to_news[word].append(title)
 
-        # 获取TOP N关键词
+        # Lấy TOP N từ khóa
         top_keywords = word_frequency.most_common(top_n)
 
-        # 构建话题列表
+        # Xây dựng danh sách chủ đề
         topics = []
         for keyword, frequency in top_keywords:
             matched_news = keyword_to_news.get(keyword, [])
@@ -381,12 +381,12 @@ class DataService:
             topics.append({
                 "keyword": keyword,
                 "frequency": frequency,
-                "matched_news": len(set(matched_news)),  # 去重后的新闻数量
-                "trend": "stable",  # TODO: 需要历史数据来计算趋势
-                "weight_score": 0.0  # TODO: 需要实现权重计算
+                "matched_news": len(set(matched_news)),  # Số lượng tin tức sau khi loại trùng
+                "trend": "stable",  # TODO: Cần dữ liệu lịch sử để tính xu hướng
+                "weight_score": 0.0  # TODO: Cần triển khai tính điểm trọng số
             })
 
-        # 构建结果
+        # Xây dựng kết quả
         result = {
             "topics": topics,
             "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -395,43 +395,43 @@ class DataService:
             "description": self._get_mode_description(mode)
         }
 
-        # 缓存结果
+        # Lưu kết quả vào cache
         self.cache.set(cache_key, result)
 
         return result
 
     def _get_mode_description(self, mode: str) -> str:
-        """获取模式描述"""
+        """Lấy mô tả chế độ"""
         descriptions = {
-            "daily": "当日累计统计",
-            "current": "最新一批统计"
+            "daily": "Thống kê tích lũy trong ngày",
+            "current": "Thống kê đợt mới nhất"
         }
-        return descriptions.get(mode, "未知模式")
+        return descriptions.get(mode, "Chế độ không xác định")
 
     def get_current_config(self, section: str = "all") -> Dict:
         """
-        获取当前系统配置
+        Lấy cấu hình hệ thống hiện tại
 
         Args:
-            section: 配置节 - all/crawler/push/keywords/weights
+            section: Phần cấu hình - all/crawler/push/keywords/weights
 
         Returns:
-            配置字典
+            Dictionary cấu hình
 
         Raises:
-            FileParseError: 配置文件解析错误
+            FileParseError: Lỗi phân tích file cấu hình
         """
-        # 尝试从缓存获取
+        # Thử lấy từ cache
         cache_key = f"config:{section}"
-        cached = self.cache.get(cache_key, ttl=3600)  # 1小时缓存
+        cached = self.cache.get(cache_key, ttl=3600)  # Cache 1 giờ
         if cached:
             return cached
 
-        # 解析配置文件
+        # Phân tích file cấu hình
         config_data = self.parser.parse_yaml_config()
         word_groups = self.parser.parse_frequency_words()
 
-        # 根据section返回对应配置
+        # Trả về cấu hình tương ứng theo section
         if section == "all" or section == "crawler":
             crawler_config = {
                 "enable_crawler": config_data.get("crawler", {}).get("enable_crawler", True),
@@ -449,7 +449,7 @@ class DataService:
                 "push_window": config_data.get("notification", {}).get("push_window", {})
             }
 
-            # 检测已配置的通知渠道
+            # Phát hiện các kênh thông báo đã cấu hình
             webhooks = config_data.get("notification", {}).get("webhooks", {})
             if webhooks.get("feishu_url"):
                 push_config["enabled_channels"].append("feishu")
@@ -471,7 +471,7 @@ class DataService:
                 "hotness_weight": config_data.get("weight", {}).get("hotness_weight", 0.1)
             }
 
-        # 组装结果
+        # Tổ hợp kết quả
         if section == "all":
             result = {
                 "crawler": crawler_config,
@@ -490,22 +490,22 @@ class DataService:
         else:
             result = {}
 
-        # 缓存结果
+        # Lưu kết quả vào cache
         self.cache.set(cache_key, result)
 
         return result
 
     def get_available_date_range(self) -> Tuple[Optional[datetime], Optional[datetime]]:
         """
-        扫描 output 目录，返回实际可用的日期范围
+        Quét thư mục output, trả về phạm vi ngày thực tế có sẵn
 
         Returns:
-            (最早日期, 最新日期) 元组，如果没有数据则返回 (None, None)
+            Tuple (ngày sớm nhất, ngày mới nhất), nếu không có dữ liệu trả về (None, None)
 
         Examples:
             >>> service = DataService()
             >>> earliest, latest = service.get_available_date_range()
-            >>> print(f"可用日期范围：{earliest} 至 {latest}")
+            >>> print(f"Phạm vi ngày có sẵn: {earliest} đến {latest}")
         """
         output_dir = self.parser.project_root / "output"
 
@@ -514,12 +514,12 @@ class DataService:
 
         available_dates = []
 
-        # 遍历日期文件夹
+        # Duyệt qua các thư mục ngày
         for date_folder in output_dir.iterdir():
             if date_folder.is_dir() and not date_folder.name.startswith('.'):
-                # 解析日期（格式: YYYY年MM月DD日）
+                # Phân tích ngày (định dạng: YYYY năm MM tháng DD ngày)
                 try:
-                    date_match = re.match(r'(\d{4})年(\d{2})月(\d{2})日', date_folder.name)
+                    date_match = re.match(r'(\d{4})năm(\d{2})tháng(\d{2})ngày', date_folder.name)
                     if date_match:
                         folder_date = datetime(
                             int(date_match.group(1)),
@@ -537,12 +537,12 @@ class DataService:
 
     def get_system_status(self) -> Dict:
         """
-        获取系统运行状态
+        Lấy trạng thái vận hành hệ thống
 
         Returns:
-            系统状态字典
+            Dictionary trạng thái hệ thống
         """
-        # 获取数据统计
+        # Lấy thống kê dữ liệu
         output_dir = self.parser.project_root / "output"
 
         total_storage = 0
@@ -551,14 +551,14 @@ class DataService:
         total_news = 0
 
         if output_dir.exists():
-            # 遍历日期文件夹
+            # Duyệt qua các thư mục ngày
             for date_folder in output_dir.iterdir():
                 if date_folder.is_dir():
-                    # 解析日期
+                    # Phân tích ngày
                     try:
                         date_str = date_folder.name
-                        # 格式: YYYY年MM月DD日
-                        date_match = re.match(r'(\d{4})年(\d{2})月(\d{2})日', date_str)
+                        # Định dạng: YYYY năm MM tháng DD ngày
+                        date_match = re.match(r'(\d{4})năm(\d{2})tháng(\d{2})ngày', date_str)
                         if date_match:
                             folder_date = datetime(
                                 int(date_match.group(1)),
@@ -574,12 +574,12 @@ class DataService:
                     except:
                         pass
 
-                    # 计算存储大小
+                    # Tính kích thước lưu trữ
                     for item in date_folder.rglob("*"):
                         if item.is_file():
                             total_storage += item.stat().st_size
 
-        # 读取版本信息
+        # Đọc thông tin phiên bản
         version_file = self.parser.project_root / "version"
         version = "unknown"
         if version_file.exists():

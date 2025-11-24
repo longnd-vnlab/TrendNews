@@ -1,7 +1,7 @@
 """
-系统管理工具
+Công cụ quản lý hệ thống
 
-实现系统状态查询和爬虫触发功能。
+Triển khai chức năng truy vấn trạng thái hệ thống và kích hoạt crawler.
 """
 
 from pathlib import Path
@@ -13,29 +13,29 @@ from ..utils.errors import MCPError, CrawlTaskError
 
 
 class SystemManagementTools:
-    """系统管理工具类"""
+    """Lớp công cụ quản lý hệ thống"""
 
     def __init__(self, project_root: str = None):
         """
-        初始化系统管理工具
+        Khởi tạo công cụ quản lý hệ thống
 
         Args:
-            project_root: 项目根目录
+            project_root: Thư mục gốc của dự án
         """
         self.data_service = DataService(project_root)
         if project_root:
             self.project_root = Path(project_root)
         else:
-            # 获取项目根目录
+            # Lấy thư mục gốc của dự án
             current_file = Path(__file__)
             self.project_root = current_file.parent.parent.parent
 
     def get_system_status(self) -> Dict:
         """
-        获取系统运行状态和健康检查信息
+        Lấy trạng thái hoạt động và thông tin kiểm tra sức khỏe hệ thống
 
         Returns:
-            系统状态字典
+            Dictionary trạng thái hệ thống
 
         Example:
             >>> tools = SystemManagementTools()
@@ -43,7 +43,7 @@ class SystemManagementTools:
             >>> print(result['system']['version'])
         """
         try:
-            # 获取系统状态
+            # Lấy trạng thái hệ thống
             status = self.data_service.get_system_status()
 
             return {
@@ -67,22 +67,22 @@ class SystemManagementTools:
 
     def trigger_crawl(self, platforms: Optional[List[str]] = None, save_to_local: bool = False, include_url: bool = False) -> Dict:
         """
-        手动触发一次临时爬取任务（可选持久化）
+        Kích hoạt thủ công một tác vụ crawl tạm thời (có tùy chọn lưu trữ)
 
         Args:
-            platforms: 指定平台列表，为空则爬取所有平台
-            save_to_local: 是否保存到本地 output 目录，默认 False
-            include_url: 是否包含URL链接，默认False（节省token）
+            platforms: Danh sách nền tảng chỉ định, để trống sẽ crawl tất cả nền tảng
+            save_to_local: Có lưu vào thư mục output cục bộ không, mặc định False
+            include_url: Có bao gồm liên kết URL không, mặc định False (tiết kiệm token)
 
         Returns:
-            爬取结果字典，包含新闻数据和保存路径（如果保存）
+            Dictionary kết quả crawl, bao gồm dữ liệu tin tức và đường dẫn lưu (nếu lưu)
 
         Example:
             >>> tools = SystemManagementTools()
-            >>> # 临时爬取，不保存
+            >>> # Crawl tạm thời, không lưu
             >>> result = tools.trigger_crawl(platforms=['zhihu', 'weibo'])
             >>> print(result['data'])
-            >>> # 爬取并保存到本地
+            >>> # Crawl và lưu vào cục bộ
             >>> result = tools.trigger_crawl(platforms=['zhihu'], save_to_local=True)
             >>> print(result['saved_files'])
         """
@@ -95,44 +95,44 @@ class SystemManagementTools:
             import pytz
             import yaml
 
-            # 参数验证
+            # Xác thực tham số
             platforms = validate_platforms(platforms)
 
-            # 加载配置文件
+            # Tải file cấu hình
             config_path = self.project_root / "config" / "config.yaml"
             if not config_path.exists():
                 raise CrawlTaskError(
-                    "配置文件不存在",
-                    suggestion=f"请确保配置文件存在: {config_path}"
+                    "File cấu hình không tồn tại",
+                    suggestion=f"Vui lòng đảm bảo file cấu hình tồn tại: {config_path}"
                 )
 
-            # 读取配置
+            # Đọc cấu hình
             with open(config_path, "r", encoding="utf-8") as f:
                 config_data = yaml.safe_load(f)
 
-            # 获取平台配置
+            # Lấy cấu hình nền tảng
             all_platforms = config_data.get("platforms", [])
             if not all_platforms:
                 raise CrawlTaskError(
-                    "配置文件中没有平台配置",
-                    suggestion="请检查 config/config.yaml 中的 platforms 配置"
+                    "Không có cấu hình nền tảng trong file cấu hình",
+                    suggestion="Vui lòng kiểm tra cấu hình platforms trong config/config.yaml"
                 )
 
-            # 过滤平台
+            # Lọc nền tảng
             if platforms:
                 target_platforms = [p for p in all_platforms if p["id"] in platforms]
                 if not target_platforms:
                     raise CrawlTaskError(
-                        f"指定的平台不存在: {platforms}",
-                        suggestion=f"可用平台: {[p['id'] for p in all_platforms]}"
+                        f"Nền tảng chỉ định không tồn tại: {platforms}",
+                        suggestion=f"Các nền tảng khả dụng: {[p['id'] for p in all_platforms]}"
                     )
             else:
                 target_platforms = all_platforms
 
-            # 获取请求间隔
+            # Lấy khoảng thời gian request
             request_interval = config_data.get("crawler", {}).get("request_interval", 100)
 
-            # 构建平台ID列表
+            # Xây dựng danh sách ID nền tảng
             ids = []
             for platform in target_platforms:
                 if "name" in platform:
@@ -140,9 +140,9 @@ class SystemManagementTools:
                 else:
                     ids.append(platform["id"])
 
-            print(f"开始临时爬取，平台: {[p.get('name', p['id']) for p in target_platforms]}")
+            print(f"Bắt đầu crawl tạm thời, nền tảng: {[p.get('name', p['id']) for p in target_platforms]}")
 
-            # 爬取数据
+            # Crawl dữ liệu
             results = {}
             id_to_name = {}
             failed_ids = []
@@ -156,7 +156,7 @@ class SystemManagementTools:
 
                 id_to_name[id_value] = name
 
-                # 构建请求URL
+                # Xây dựng URL request
                 url = f"https://newsnow.busiyi.world/api/s?id={id_value}&latest"
 
                 headers = {
@@ -167,7 +167,7 @@ class SystemManagementTools:
                     "Cache-Control": "no-cache",
                 }
 
-                # 重试机制
+                # Cơ chế retry
                 max_retries = 2
                 retries = 0
                 success = False
@@ -180,14 +180,14 @@ class SystemManagementTools:
                         data_text = response.text
                         data_json = json.loads(data_text)
 
-                        status = data_json.get("status", "未知")
+                        status = data_json.get("status", "Không xác định")
                         if status not in ["success", "cache"]:
-                            raise ValueError(f"响应状态异常: {status}")
+                            raise ValueError(f"Trạng thái phản hồi bất thường: {status}")
 
-                        status_info = "最新数据" if status == "success" else "缓存数据"
-                        print(f"获取 {id_value} 成功（{status_info}）")
+                        status_info = "Dữ liệu mới nhất" if status == "success" else "Dữ liệu cache"
+                        print(f"Lấy {id_value} thành công ({status_info})")
 
-                        # 解析数据
+                        # Phân tích dữ liệu
                         results[id_value] = {}
                         for index, item in enumerate(data_json.get("items", []), 1):
                             title = item["title"]
@@ -209,19 +209,19 @@ class SystemManagementTools:
                         retries += 1
                         if retries <= max_retries:
                             wait_time = random.uniform(3, 5)
-                            print(f"请求 {id_value} 失败: {e}. {wait_time:.2f}秒后重试...")
+                            print(f"Request {id_value} thất bại: {e}. Thử lại sau {wait_time:.2f} giây...")
                             time.sleep(wait_time)
                         else:
-                            print(f"请求 {id_value} 失败: {e}")
+                            print(f"Request {id_value} thất bại: {e}")
                             failed_ids.append(id_value)
 
-                # 请求间隔
+                # Khoảng thời gian request
                 if i < len(ids) - 1:
                     actual_interval = request_interval + random.randint(-10, 20)
                     actual_interval = max(50, actual_interval)
                     time.sleep(actual_interval / 1000)
 
-            # 格式化返回数据
+            # Định dạng dữ liệu trả về
             news_data = []
             for platform_id, titles_data in results.items():
                 platform_name = id_to_name.get(platform_id, platform_id)
@@ -233,18 +233,18 @@ class SystemManagementTools:
                         "ranks": info["ranks"]
                     }
 
-                    # 条件性添加 URL 字段
+                    # Thêm trường URL theo điều kiện
                     if include_url:
                         news_item["url"] = info.get("url", "")
                         news_item["mobile_url"] = info.get("mobileUrl", "")
 
                     news_data.append(news_item)
 
-            # 获取北京时间
+            # Lấy thời gian Bắc Kinh
             beijing_tz = pytz.timezone("Asia/Shanghai")
             now = datetime.now(beijing_tz)
 
-            # 构建返回结果
+            # Xây dựng kết quả trả về
             result = {
                 "success": True,
                 "task_id": f"crawl_{int(time.time())}",
@@ -257,14 +257,14 @@ class SystemManagementTools:
                 "saved_to_local": save_to_local
             }
 
-            # 如果需要持久化，调用保存逻辑
+            # Nếu cần lưu trữ, gọi logic lưu
             if save_to_local:
                 try:
                     import re
 
-                    # 辅助函数：清理标题
+                    # Hàm phụ trợ: Làm sạch tiêu đề
                     def clean_title(title: str) -> str:
-                        """清理标题中的特殊字符"""
+                        """Làm sạch ký tự đặc biệt trong tiêu đề"""
                         if not isinstance(title, str):
                             title = str(title)
                         cleaned_title = title.replace("\n", " ").replace("\r", " ")
@@ -272,36 +272,36 @@ class SystemManagementTools:
                         cleaned_title = cleaned_title.strip()
                         return cleaned_title
 
-                    # 辅助函数：创建目录
+                    # Hàm phụ trợ: Tạo thư mục
                     def ensure_directory_exists(directory: str):
-                        """确保目录存在"""
+                        """Đảm bảo thư mục tồn tại"""
                         Path(directory).mkdir(parents=True, exist_ok=True)
 
-                    # 格式化日期和时间
-                    date_folder = now.strftime("%Y年%m月%d日")
-                    time_filename = now.strftime("%H时%M分")
+                    # Định dạng ngày và giờ
+                    date_folder = now.strftime("%Ynăm%mtháng%dngày")
+                    time_filename = now.strftime("%Hgiờ%Mphút")
 
-                    # 创建 txt 文件路径
+                    # Tạo đường dẫn file txt
                     txt_dir = self.project_root / "output" / date_folder / "txt"
                     ensure_directory_exists(str(txt_dir))
                     txt_file_path = txt_dir / f"{time_filename}.txt"
 
-                    # 创建 html 文件路径
+                    # Tạo đường dẫn file html
                     html_dir = self.project_root / "output" / date_folder / "html"
                     ensure_directory_exists(str(html_dir))
                     html_file_path = html_dir / f"{time_filename}.html"
 
-                    # 保存 txt 文件（按照 main.py 的格式）
+                    # Lưu file txt (theo định dạng của main.py)
                     with open(txt_file_path, "w", encoding="utf-8") as f:
                         for id_value, title_data in results.items():
-                            # id | name 或 id
+                            # id | name hoặc id
                             name = id_to_name.get(id_value)
                             if name and name != id_value:
                                 f.write(f"{id_value} | {name}\n")
                             else:
                                 f.write(f"{id_value}\n")
 
-                            # 按排名排序标题
+                            # Sắp xếp tiêu đề theo thứ hạng
                             sorted_titles = []
                             for title, info in title_data.items():
                                 cleaned = clean_title(title)
@@ -330,16 +330,16 @@ class SystemManagementTools:
                             f.write("\n")
 
                         if failed_ids:
-                            f.write("==== 以下ID请求失败 ====\n")
+                            f.write("==== Các ID request thất bại ====\n")
                             for id_value in failed_ids:
                                 f.write(f"{id_value}\n")
 
-                    # 保存 html 文件（简化版）
+                    # Lưu file html (phiên bản đơn giản)
                     html_content = self._generate_simple_html(results, id_to_name, failed_ids, now)
                     with open(html_file_path, "w", encoding="utf-8") as f:
                         f.write(html_content)
 
-                    print(f"数据已保存到:")
+                    print(f"Dữ liệu đã được lưu vào:")
                     print(f"  TXT: {txt_file_path}")
                     print(f"  HTML: {html_file_path}")
 
@@ -347,14 +347,14 @@ class SystemManagementTools:
                         "txt": str(txt_file_path),
                         "html": str(html_file_path)
                     }
-                    result["note"] = "数据已持久化到 output 文件夹"
+                    result["note"] = "Dữ liệu đã được lưu trữ vào thư mục output"
 
                 except Exception as e:
-                    print(f"保存文件失败: {e}")
+                    print(f"Lưu file thất bại: {e}")
                     result["save_error"] = str(e)
-                    result["note"] = "爬取成功但保存失败，数据仅在内存中"
+                    result["note"] = "Crawl thành công nhưng lưu thất bại, dữ liệu chỉ trong bộ nhớ"
             else:
-                result["note"] = "临时爬取结果，未持久化到output文件夹"
+                result["note"] = "Kết quả crawl tạm thời, chưa được lưu trữ vào thư mục output"
 
             return result
 
@@ -375,13 +375,13 @@ class SystemManagementTools:
             }
 
     def _generate_simple_html(self, results: Dict, id_to_name: Dict, failed_ids: List, now) -> str:
-        """生成简化的 HTML 报告"""
+        """Tạo báo cáo HTML đơn giản"""
         html = """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP 爬取结果</title>
+    <title>Kết quả Crawl MCP</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
@@ -400,19 +400,19 @@ class SystemManagementTools:
 </head>
 <body>
     <div class="container">
-        <h1>MCP 爬取结果</h1>
+        <h1>Kết quả Crawl MCP</h1>
 """
 
-        # 添加时间戳
-        html += f'        <p class="timestamp">爬取时间: {now.strftime("%Y-%m-%d %H:%M:%S")}</p>\n\n'
+        # Thêm dấu thời gian
+        html += f'        <p class="timestamp">Thời gian crawl: {now.strftime("%Y-%m-%d %H:%M:%S")}</p>\n\n'
 
-        # 遍历每个平台
+        # Duyệt qua từng nền tảng
         for platform_id, titles_data in results.items():
             platform_name = id_to_name.get(platform_id, platform_id)
             html += f'        <div class="platform">\n'
             html += f'            <div class="platform-name">{platform_name}</div>\n'
 
-            # 排序标题
+            # Sắp xếp tiêu đề
             sorted_items = []
             for title, info in titles_data.items():
                 ranks = info.get("ranks", [])
@@ -423,23 +423,23 @@ class SystemManagementTools:
 
             sorted_items.sort(key=lambda x: x[0])
 
-            # 显示新闻
+            # Hiển thị tin tức
             for rank, title, url, mobile_url in sorted_items:
                 html += f'            <div class="news-item">\n'
                 html += f'                <span class="rank">{rank}.</span>\n'
                 html += f'                <span class="title">{self._html_escape(title)}</span>\n'
                 if url:
-                    html += f'                <a class="link" href="{self._html_escape(url)}" target="_blank">链接</a>\n'
+                    html += f'                <a class="link" href="{self._html_escape(url)}" target="_blank">Liên kết</a>\n'
                 if mobile_url and mobile_url != url:
-                    html += f'                <a class="link" href="{self._html_escape(mobile_url)}" target="_blank">移动版</a>\n'
+                    html += f'                <a class="link" href="{self._html_escape(mobile_url)}" target="_blank">Phiên bản di động</a>\n'
                 html += '            </div>\n'
 
             html += '        </div>\n\n'
 
-        # 失败的平台
+        # Các nền tảng thất bại
         if failed_ids:
             html += '        <div class="failed">\n'
-            html += '            <h3>请求失败的平台</h3>\n'
+            html += '            <h3>Các nền tảng request thất bại</h3>\n'
             html += '            <ul>\n'
             for platform_id in failed_ids:
                 html += f'                <li>{self._html_escape(platform_id)}</li>\n'
@@ -453,7 +453,7 @@ class SystemManagementTools:
         return html
 
     def _html_escape(self, text: str) -> str:
-        """HTML 转义"""
+        """Escape HTML"""
         if not isinstance(text, str):
             text = str(text)
         return (

@@ -1,5 +1,5 @@
 """
-服务层模块
+Module lớp dịch vụ
 
-提供数据访问、缓存、解析等核心服务。
+Cung cấp dịch vụ cốt lõi như truy cập dữ liệu, bộ nhớ đệm, phân tích, v.v.。
 """

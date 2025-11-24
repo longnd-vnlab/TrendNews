@@ -1,7 +1,7 @@
 """
-参数验证工具
+Công cụ xác thực tham số
 
-提供统一的参数验证功能。
+Cung cấp chức năng xác thực tham số thống nhất.
 """
 
 from datetime import datetime
@@ -15,17 +15,17 @@ from .date_parser import DateParser
 
 def get_supported_platforms() -> List[str]:
     """
-    从 config.yaml 动态获取支持的平台列表
+    Lấy danh sách nền tảng được hỗ trợ từ config.yaml một cách động
 
     Returns:
-        平台ID列表
+        Danh sách ID nền tảng
 
-    Note:
-        - 读取失败时返回空列表，允许所有平台通过（降级策略）
-        - 平台列表来自 config/config.yaml 中的 platforms 配置
+    Lưu ý:
+        - Khi đọc thất bại, trả về danh sách rỗng, cho phép tất cả nền tảng đi qua (chiến lược giảm cấp)
+        - Danh sách nền tảng lấy từ cấu hình platforms trong config/config.yaml
     """
     try:
-        # 获取 config.yaml 路径（相对于当前文件）
+        # Lấy đường dẫn config.yaml (tương đối với file hiện tại)
         current_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = os.path.join(current_dir, "..", "..", "config", "config.yaml")
         config_path = os.path.normpath(config_path)
@@ -35,53 +35,53 @@ def get_supported_platforms() -> List[str]:
             platforms = config.get('platforms', [])
             return [p['id'] for p in platforms if 'id' in p]
     except Exception as e:
-        # 降级方案：返回空列表，允许所有平台
-        print(f"警告：无法加载平台配置 ({config_path}): {e}")
+        # Phương án giảm cấp: trả về danh sách rỗng, cho phép tất cả nền tảng
+        print(f"Cảnh báo: Không thể tải cấu hình nền tảng ({config_path}): {e}")
         return []
 
 
 def validate_platforms(platforms: Optional[List[str]]) -> List[str]:
     """
-    验证平台列表
+    Xác thực danh sách nền tảng
 
     Args:
-        platforms: 平台ID列表，None表示使用 config.yaml 中配置的所有平台
+        platforms: Danh sách ID nền tảng, None nghĩa là sử dụng tất cả nền tảng được cấu hình trong config.yaml
 
     Returns:
-        验证后的平台列表
+        Danh sách nền tảng đã xác thực
 
     Raises:
-        InvalidParameterError: 平台不支持
+        InvalidParameterError: Nền tảng không được hỗ trợ
 
-    Note:
-        - platforms=None 时，返回 config.yaml 中配置的平台列表
-        - 会验证平台ID是否在 config.yaml 的 platforms 配置中
-        - 配置加载失败时，允许所有平台通过（降级策略）
+    Lưu ý:
+        - Khi platforms=None, trả về danh sách nền tảng được cấu hình trong config.yaml
+        - Sẽ xác thực xem ID nền tảng có trong cấu hình platforms của config.yaml không
+        - Khi tải cấu hình thất bại, cho phép tất cả nền tảng đi qua (chiến lược giảm cấp)
     """
     supported_platforms = get_supported_platforms()
 
     if platforms is None:
-        # 返回配置文件中的平台列表（用户的默认配置）
+        # Trả về danh sách nền tảng trong file cấu hình (cấu hình mặc định của người dùng)
         return supported_platforms if supported_platforms else []
 
     if not isinstance(platforms, list):
-        raise InvalidParameterError("platforms 参数必须是列表类型")
+        raise InvalidParameterError("Tham số platforms phải là kiểu danh sách")
 
     if not platforms:
-        # 空列表时，返回配置文件中的平台列表
+        # Khi danh sách rỗng, trả về danh sách nền tảng trong file cấu hình
         return supported_platforms if supported_platforms else []
 
-    # 如果配置加载失败（supported_platforms为空），允许所有平台通过
+    # Nếu tải cấu hình thất bại (supported_platforms rỗng), cho phép tất cả nền tảng đi qua
     if not supported_platforms:
-        print("警告：平台配置未加载，跳过平台验证")
+        print("Cảnh báo: Cấu hình nền tảng chưa được tải, bỏ qua xác thực nền tảng")
         return platforms
 
-    # 验证每个平台是否在配置中
+    # Xác thực xem mỗi nền tảng có trong cấu hình không
     invalid_platforms = [p for p in platforms if p not in supported_platforms]
     if invalid_platforms:
         raise InvalidParameterError(
-            f"不支持的平台: {', '.join(invalid_platforms)}",
-            suggestion=f"支持的平台（来自config.yaml）: {', '.join(supported_platforms)}"
+            f"Nền tảng không được hỗ trợ: {', '.join(invalid_platforms)}",
+            suggestion=f"Các nền tảng được hỗ trợ (từ config.yaml): {', '.join(supported_platforms)}"
         )
 
     return platforms
@@ -89,32 +89,32 @@ def validate_platforms(platforms: Optional[List[str]]) -> List[str]:
 
 def validate_limit(limit: Optional[int], default: int = 20, max_limit: int = 1000) -> int:
     """
-    验证数量限制参数
+    Xác thực tham số giới hạn số lượng
 
     Args:
-        limit: 限制数量
-        default: 默认值
-        max_limit: 最大限制
+        limit: Số lượng giới hạn
+        default: Giá trị mặc định
+        max_limit: Giới hạn tối đa
 
     Returns:
-        验证后的限制值
+        Giá trị giới hạn đã xác thực
 
     Raises:
-        InvalidParameterError: 参数无效
+        InvalidParameterError: Tham số không hợp lệ
     """
     if limit is None:
         return default
 
     if not isinstance(limit, int):
-        raise InvalidParameterError("limit 参数必须是整数类型")
+        raise InvalidParameterError("Tham số limit phải là kiểu số nguyên")
 
     if limit <= 0:
-        raise InvalidParameterError("limit 必须大于0")
+        raise InvalidParameterError("limit phải lớn hơn 0")
 
     if limit > max_limit:
         raise InvalidParameterError(
-            f"limit 不能超过 {max_limit}",
-            suggestion=f"请使用分页或降低limit值"
+            f"limit không thể vượt quá {max_limit}",
+            suggestion=f"Vui lòng sử dụng phân trang hoặc giảm giá trị limit"
         )
 
     return limit
@@ -122,52 +122,52 @@ def validate_limit(limit: Optional[int], default: int = 20, max_limit: int = 100
 
 def validate_date(date_str: str) -> datetime:
     """
-    验证日期格式
+    Xác thực định dạng ngày
 
     Args:
-        date_str: 日期字符串 (YYYY-MM-DD)
+        date_str: Chuỗi ngày (YYYY-MM-DD)
 
     Returns:
-        datetime对象
+        Đối tượng datetime
 
     Raises:
-        InvalidParameterError: 日期格式错误
+        InvalidParameterError: Định dạng ngày sai
     """
     try:
         return datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
         raise InvalidParameterError(
-            f"日期格式错误: {date_str}",
-            suggestion="请使用 YYYY-MM-DD 格式，例如: 2025-10-11"
+            f"Định dạng ngày sai: {date_str}",
+            suggestion="Vui lòng sử dụng định dạng YYYY-MM-DD, ví dụ: 2025-10-11"
         )
 
 
 def validate_date_range(date_range: Optional[dict]) -> Optional[tuple]:
     """
-    验证日期范围
+    Xác thực phạm vi ngày
 
     Args:
-        date_range: 日期范围字典 {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}
+        date_range: Dictionary phạm vi ngày {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}
 
     Returns:
-        (start_date, end_date) 元组，或 None
+        Tuple (start_date, end_date), hoặc None
 
     Raises:
-        InvalidParameterError: 日期范围无效
+        InvalidParameterError: Phạm vi ngày không hợp lệ
     """
     if date_range is None:
         return None
 
     if not isinstance(date_range, dict):
-        raise InvalidParameterError("date_range 必须是字典类型")
+        raise InvalidParameterError("date_range phải là kiểu dictionary")
 
     start_str = date_range.get("start")
     end_str = date_range.get("end")
 
     if not start_str or not end_str:
         raise InvalidParameterError(
-            "date_range 必须包含 start 和 end 字段",
-            suggestion='例如: {"start": "2025-10-01", "end": "2025-10-11"}'
+            "date_range phải chứa trường start và end",
+            suggestion='Ví dụ: {"start": "2025-10-01", "end": "2025-10-11"}'
         )
 
     start_date = validate_date(start_str)
@@ -175,25 +175,25 @@ def validate_date_range(date_range: Optional[dict]) -> Optional[tuple]:
 
     if start_date > end_date:
         raise InvalidParameterError(
-            "开始日期不能晚于结束日期",
+            "Ngày bắt đầu không thể sau ngày kết thúc",
             suggestion=f"start: {start_str}, end: {end_str}"
         )
 
-    # 检查日期是否在未来
+    # Kiểm tra xem ngày có trong tương lai không
     today = datetime.now().date()
     if start_date.date() > today or end_date.date() > today:
-        # 获取可用日期范围提示
+        # Lấy gợi ý phạm vi ngày khả dụng
         try:
             from ..services.data_service import DataService
             data_service = DataService()
             earliest, latest = data_service.get_available_date_range()
 
             if earliest and latest:
-                available_range = f"{earliest.strftime('%Y-%m-%d')} 至 {latest.strftime('%Y-%m-%d')}"
+                available_range = f"{earliest.strftime('%Y-%m-%d')} đến {latest.strftime('%Y-%m-%d')}"
             else:
-                available_range = "无可用数据"
+                available_range = "Không có dữ liệu khả dụng"
         except Exception:
-            available_range = "未知（请检查 output 目录）"
+            available_range = "Không xác định (vui lòng kiểm tra thư mục output)"
 
         future_dates = []
         if start_date.date() > today:
@@ -202,8 +202,8 @@ def validate_date_range(date_range: Optional[dict]) -> Optional[tuple]:
             future_dates.append(end_str)
 
         raise InvalidParameterError(
-            f"不允许查询未来日期: {', '.join(future_dates)}（当前日期: {today.strftime('%Y-%m-%d')}）",
-            suggestion=f"当前可用数据范围: {available_range}"
+            f"Không cho phép truy vấn ngày tương lai: {', '.join(future_dates)} (Ngày hiện tại: {today.strftime('%Y-%m-%d')})",
+            suggestion=f"Phạm vi dữ liệu khả dụng hiện tại: {available_range}"
         )
 
     return (start_date, end_date)
@@ -211,32 +211,32 @@ def validate_date_range(date_range: Optional[dict]) -> Optional[tuple]:
 
 def validate_keyword(keyword: str) -> str:
     """
-    验证关键词
+    Xác thực từ khóa
 
     Args:
-        keyword: 搜索关键词
+        keyword: Từ khóa tìm kiếm
 
     Returns:
-        处理后的关键词
+        Từ khóa đã xử lý
 
     Raises:
-        InvalidParameterError: 关键词无效
+        InvalidParameterError: Từ khóa không hợp lệ
     """
     if not keyword:
-        raise InvalidParameterError("keyword 不能为空")
+        raise InvalidParameterError("keyword không thể để trống")
 
     if not isinstance(keyword, str):
-        raise InvalidParameterError("keyword 必须是字符串类型")
+        raise InvalidParameterError("keyword phải là kiểu chuỗi")
 
     keyword = keyword.strip()
 
     if not keyword:
-        raise InvalidParameterError("keyword 不能为空白字符")
+        raise InvalidParameterError("keyword không thể chỉ chứa khoảng trắng")
 
     if len(keyword) > 100:
         raise InvalidParameterError(
-            "keyword 长度不能超过100个字符",
-            suggestion="请使用更简洁的关键词"
+            "Độ dài keyword không thể vượt quá 100 ký tự",
+            suggestion="Vui lòng sử dụng từ khóa ngắn gọn hơn"
         )
 
     return keyword
@@ -244,46 +244,46 @@ def validate_keyword(keyword: str) -> str:
 
 def validate_top_n(top_n: Optional[int], default: int = 10) -> int:
     """
-    验证TOP N参数
+    Xác thực tham số TOP N
 
     Args:
-        top_n: TOP N数量
-        default: 默认值
+        top_n: Số lượng TOP N
+        default: Giá trị mặc định
 
     Returns:
-        验证后的值
+        Giá trị đã xác thực
 
     Raises:
-        InvalidParameterError: 参数无效
+        InvalidParameterError: Tham số không hợp lệ
     """
     return validate_limit(top_n, default=default, max_limit=100)
 
 
 def validate_mode(mode: Optional[str], valid_modes: List[str], default: str) -> str:
     """
-    验证模式参数
+    Xác thực tham số chế độ
 
     Args:
-        mode: 模式字符串
-        valid_modes: 有效模式列表
-        default: 默认模式
+        mode: Chuỗi chế độ
+        valid_modes: Danh sách chế độ hợp lệ
+        default: Chế độ mặc định
 
     Returns:
-        验证后的模式
+        Chế độ đã xác thực
 
     Raises:
-        InvalidParameterError: 模式无效
+        InvalidParameterError: Chế độ không hợp lệ
     """
     if mode is None:
         return default
 
     if not isinstance(mode, str):
-        raise InvalidParameterError("mode 必须是字符串类型")
+        raise InvalidParameterError("mode phải là kiểu chuỗi")
 
     if mode not in valid_modes:
         raise InvalidParameterError(
-            f"无效的模式: {mode}",
-            suggestion=f"支持的模式: {', '.join(valid_modes)}"
+            f"Chế độ không hợp lệ: {mode}",
+            suggestion=f"Các chế độ được hỗ trợ: {', '.join(valid_modes)}"
         )
 
     return mode
@@ -291,16 +291,16 @@ def validate_mode(mode: Optional[str], valid_modes: List[str], default: str) -> 
 
 def validate_config_section(section: Optional[str]) -> str:
     """
-    验证配置节参数
+    Xác thực tham số phần cấu hình
 
     Args:
-        section: 配置节名称
+        section: Tên phần cấu hình
 
     Returns:
-        验证后的配置节
+        Phần cấu hình đã xác thực
 
     Raises:
-        InvalidParameterError: 配置节无效
+        InvalidParameterError: Phần cấu hình không hợp lệ
     """
     valid_sections = ["all", "crawler", "push", "keywords", "weights"]
     return validate_mode(section, valid_sections, "all")
@@ -312,40 +312,39 @@ def validate_date_query(
     max_days_ago: int = 365
 ) -> datetime:
     """
-    验证并解析日期查询字符串
+    Xác thực và phân tích chuỗi truy vấn ngày
 
     Args:
-        date_query: 日期查询字符串
-        allow_future: 是否允许未来日期
-        max_days_ago: 允许查询的最大天数
+        date_query: Chuỗi truy vấn ngày
+        allow_future: Có cho phép ngày tương lai không
+        max_days_ago: Số ngày tối đa cho phép truy vấn
 
     Returns:
-        解析后的datetime对象
+        Đối tượng datetime đã phân tích
 
     Raises:
-        InvalidParameterError: 日期查询无效
+        InvalidParameterError: Truy vấn ngày không hợp lệ
 
-    Examples:
-        >>> validate_date_query("昨天")
+    Ví dụ:
+        >>> validate_date_query("hôm qua")
         datetime(2025, 10, 10)
         >>> validate_date_query("2025-10-10")
         datetime(2025, 10, 10)
     """
     if not date_query:
         raise InvalidParameterError(
-            "日期查询字符串不能为空",
-            suggestion="请提供日期查询，如：今天、昨天、2025-10-10"
+            "Chuỗi truy vấn ngày không thể để trống",
+            suggestion="Vui lòng cung cấp truy vấn ngày, ví dụ: hôm nay, hôm qua, 2025-10-10"
         )
 
-    # 使用DateParser解析日期
+    # Sử dụng DateParser để phân tích ngày
     parsed_date = DateParser.parse_date_query(date_query)
 
-    # 验证日期不在未来
+    # Xác thực ngày không nằm trong tương lai
     if not allow_future:
         DateParser.validate_date_not_future(parsed_date)
 
-    # 验证日期不太久远
+    # Xác thực ngày không quá xa
     DateParser.validate_date_not_too_old(parsed_date, max_days=max_days_ago)
 
     return parsed_date
-
