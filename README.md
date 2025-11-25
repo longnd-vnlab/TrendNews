@@ -1,3 +1,6 @@
+<img width="621" height="888" alt="Screenshot from 2025-11-25 08-29-27" src="https://github.com/user-attachments/assets/43bb2f53-8e60-4112-bc5f-61c9bb62e909" />
+
+
 # Phiên bản refactor của TrendRadar 📡
 
 > Công cụ phân tích xu hướng tin tức từ nhiều nền tảng truyền thông Trung Quốc với kiến trúc modular.
